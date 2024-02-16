@@ -25,6 +25,7 @@ const {
   data: comments,
   error: commentsError,
   isError: commentsIsError,
+  isFetching: commentsIsFetching,
   isLoading: commentsIsLoading
 } = useQuery({
   enabled: () => loadComments.value && !postIsError.value,
@@ -47,7 +48,7 @@ const {
         <p>{{ post.body }}</p>
         <RouterLink to="/posts">Back to list</RouterLink>
         <p v-if="postIsFetching" style="color: var(--color-heading)">
-          <br /><br />
+          <br />
           Re-fetching in the background...
         </p>
       </template>
@@ -63,6 +64,10 @@ const {
       <div v-else-if="comments" class="comments">
         <p v-for="(comment, index) in comments" :key="index" style="margin-top: 1rem">
           {{ comment.body }} &mdash; {{ comment.user.username }}
+        </p>
+        <p v-if="commentsIsFetching" style="color: var(--color-heading)">
+          <br />
+          Re-fetching comments in the background...
         </p>
       </div>
     </section>
