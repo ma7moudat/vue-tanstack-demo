@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
+import { useInfiniteQuery } from '@tanstack/vue-query'
 import type { PostsResponse } from '@/models'
 
 // Query
 const { fetchNextPage, hasNextPage, isLoading, isError, isFetching, data, error } =
-  useInfiniteQuery({
-    getNextPageParam: (lastPage, allPages) => {
+  useInfiniteQuery<PostsResponse>({
+    getNextPageParam: (lastPage) => {
       const { limit = 30, skip = 10, total = Infinity } = lastPage
       return limit + skip < total ? limit + skip : undefined
     },
+    initialPageParam: 0,
     queryKey: ['posts'],
     queryFn: ({ pageParam = 0 }) =>
       fetch(`https://dummyjson.com/posts?delay=1000&limit=30&skip=${pageParam}`).then(

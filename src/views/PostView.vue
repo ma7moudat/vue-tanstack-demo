@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { Post } from '@/models'
+import type { Post } from '@/models'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 
