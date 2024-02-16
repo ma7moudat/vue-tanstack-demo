@@ -13,3 +13,22 @@ export type PostsResponse = {
   skip: number
   limit: number
 }
+
+export type User = {
+  id: number
+  username: string
+}
+
+export type PostComment = {
+  body: string
+  id: number
+  postId: number
+  user: User
+}
+
+export type PostCommentsResponse = {
+  comments: PostComment[]
+  total: number
+  skip: number
+  limit: number
+}

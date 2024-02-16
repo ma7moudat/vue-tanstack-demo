@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import type { Post } from '@/models'
+import type { Post, PostCommentsResponse } from '@/models'
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { ref } from 'vue'
 
 const route = useRoute()
+const loadComments = ref(false)
 
-const { isLoading, isError, isFetching, data, error } = useQuery({
+const {
+  data: post,
+  error: postError,
+  isError: postIsError,
+  isFetching: postIsFetching,
+  isLoading: postIsLoading
+} = useQuery<Post>({
   queryKey: ['posts', route.params.id],
   queryFn: (): Promise<Post> =>
     route.params.id
@@ -14,22 +21,51 @@ const { isLoading, isError, isFetching, data, error } = useQuery({
       : Promise.reject('Post ID not provided')
 })
 
-const post = computed(() => data.value)
+const {
+  data: comments,
+  error: commentsError,
+  isError: commentsIsError,
+  isLoading: commentsIsLoading
+} = useQuery({
+  enabled: () => loadComments.value && !postIsError.value,
+  queryKey: ['posts', route.params.id, 'comments'],
+  queryFn: (): Promise<PostCommentsResponse> =>
+    fetch(`https://dummyjson.com/posts/${route.params.id}/comments?delay=1000`).then((res) =>
+      res.json()
+    ),
+  select: (data) => data.comments
+})
 </script>
 
 <template>
   <div>
-    <span v-if="isLoading">Loading...</span>
-    <span v-else-if="isError">Error: {{ error }}</span>
-    <template v-else-if="post">
-      <h2>{{ post.title }}</h2>
-      <p>{{ post.body }}</p>
-      <RouterLink to="/posts">Back to list</RouterLink>
-      <p v-if="isFetching" style="color: var(--color-heading)">
-        <br /><br />
-        Re-fetching in the background...
-      </p>
-    </template>
+    <article>
+      <span v-if="postIsLoading">Loading...</span>
+      <span v-else-if="postIsError">Error: {{ postError }}</span>
+      <template v-else-if="post">
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.body }}</p>
+        <RouterLink to="/posts">Back to list</RouterLink>
+        <p v-if="postIsFetching" style="color: var(--color-heading)">
+          <br /><br />
+          Re-fetching in the background...
+        </p>
+      </template>
+    </article>
+    <section v-if="post">
+      <br />
+      <h3>Comments</h3>
+      <button v-if="!loadComments" @click="loadComments = true" style="margin-top: 1rem">
+        Load comments
+      </button>
+      <span v-if="commentsIsLoading">Loading comments...</span>
+      <span v-else-if="commentsIsError">Error: {{ commentsError }}</span>
+      <div v-else-if="comments" class="comments">
+        <p v-for="(comment, index) in comments" :key="index" style="margin-top: 1rem">
+          {{ comment.body }} &mdash; {{ comment.user.username }}
+        </p>
+      </div>
+    </section>
   </div>
 </template>
 
