@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import type { Post, PostCommentsResponse } from '@/models'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 
 const route = useRoute()
+const queryClient = useQueryClient()
 const loadComments = ref(false)
+const newComment = ref('')
 
 const {
   data: post,
@@ -36,6 +38,28 @@ const {
     ),
   select: (data) => data.comments
 })
+
+const { mutate, reset, isPending } = useMutation({
+  mutationFn: (comment: string) =>
+    fetch('https://dummyjson.com/comments/add?delay=1000', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        body: comment,
+        postId: route.params.id,
+        userId: 5
+      })
+    }),
+  onSuccess: () => {
+    newComment.value = ''
+    queryClient.invalidateQueries({ queryKey: ['posts', route.params.id, 'comments'] })
+  }
+})
+
+const onCommentSubmit = () => {
+  reset()
+  mutate(newComment.value)
+}
 </script>
 
 <template>
@@ -53,8 +77,10 @@ const {
         </p>
       </template>
     </article>
+
+    <br />
+
     <section v-if="post">
-      <br />
       <h3>Comments</h3>
       <button v-if="!loadComments" @click="loadComments = true" style="margin-top: 1rem">
         Load comments
@@ -70,6 +96,15 @@ const {
           Re-fetching comments in the background...
         </p>
       </div>
+
+      <br />
+
+      <form @submit.prevent="onCommentSubmit" style="margin-top: 2rem">
+        <div>
+          <textarea v-model="newComment" :disabled="isPending"></textarea>
+        </div>
+        <button type="submit" :disabled="isPending">Send comment</button>
+      </form>
     </section>
   </div>
 </template>
