@@ -103,7 +103,7 @@ const onCommentSubmit = () => {
         <div>
           <textarea v-model="newComment" :disabled="isPending"></textarea>
         </div>
-        <button type="submit" :disabled="isPending">Send comment</button>
+        <button type="submit" :disabled="!newComment || isPending">Send comment</button>
       </form>
     </section>
   </div>
